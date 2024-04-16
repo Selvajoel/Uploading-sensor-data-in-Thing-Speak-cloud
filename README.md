@@ -1,16 +1,16 @@
-### NAME : SELVAJOEL . S
+### NAME : SELVAJOEL
 ### REG NO : 212222220040
-# EXP-3 Uploading temperature sensor data in Thing Speak cloud
+# EXPERIMENT - 3 : Uploading temperature sensor data in Thing Speak cloud
 
 # AIM:
 To monitor the temperature sensor data in the Thing speak using an ESP32 controller.
 
 # Apparatus required:
-ESP32 Controller  </br>
-Temperature Sensor </br>
-Power supply </br>
-Connecting wires </br>
-Bread board </br>
+* ESP32 Controller  </br>
+* Temperature Sensor </br>
+* Power supply </br>
+* Connecting wires </br>
+* Bread board </br>
 
 # PROCEDURE:
 ## Arduino IDE
@@ -27,6 +27,7 @@ Step10: Check the jumper position and connect 4 & 5 of P4.  </br>
 Step11. Upload the program in the esp32. </br>
 Step12 Press the boot button in ESP32 and then press and release the reset button after release the boot button </br>
 Step13 Check the output in the cloud </br>
+
 
 ## Thingspeak
 
@@ -73,41 +74,87 @@ Automatically act on your data and communicate using third-party services like T
 
 
 # PROGRAM:
-```
-const int trigPin = 9;
-const int echoPin = 10;
 
-long duration;
-int distance;
+```
+#include "ThingSpeak.h"
+#include <WiFi.h>
+#include "DHT.h"
+#include <OneWire.h>
+#include <DallasTemperature.h>
+
+char ssid[] = "xxx"; // Your WiFi SSID
+char pass[] = "xxx"; // Your WiFi password
+
+const int out = 26; // Pin for temperature sensor data
+long T;
+float temperature = 0; // Initialize temperature
+WiFiClient client;
+DHT dht(26, DHT11);
+
+unsigned long myChannelField = 2487114; // Channel ID
+const int TemperatureField = 1;        // Field for temperature data
+const int HumidityField = 2;          // Field for humidity data
+
+const char* myWriteAPIKey = "BT4O1P45J883JFQT"; // Your write API Key
+
+// Temperature sensor setup
 void setup() {
-pinMode(trigPin, OUTPUT);
-pinMode(echoPin, INPUT);
-Serial.begin(9600);
-}
+  Serial.begin(115200);
+  pinMode(out, INPUT); // Set pin mode to input for temperature sensor
+  ThingSpeak.begin(client);
+ }
 
 void loop() 
 {
-  digitalWrite(trigPin, LOW);
-  delayMicroseconds(2);
-  digitalWrite(trigPin, HIGH);
-  delayMicroseconds(10);
-  digitalWrite(trigPin, LOW);
-  duration = pulseIn(echoPin, HIGH);
-  distance= duration*0.034/2;
-  Serial.print("Distance: ");
-  Serial.println(distance);
-}
-  ```
-# CIRCUIT DIAGRAM:
+  if (WiFi.status() != WL_CONNECTED) 
+  {
+    Serial.print("Attempting to connect to SSID: ");
+    Serial.println(ssid);
+    while (WiFi.status() != WL_CONNECTED) 
+    {
+      WiFi.begin(ssid, pass);
+      Serial.print(".");
+      delay(5000);
+    }
+    Serial.println("\nConnected.");
+  }
+```
+```
+  // Read temperature
+  float temperature = dht.readTemperature();
+  float humidity = dht.readHumidity();
+  
+  Serial.print("Temperature: ");
+  Serial.print(temperature);
+  Serial.println(" °C");
 
-![320400439-b48a8105-3c05-4557-9051-fa37330b988f](https://github.com/Selvajoel/Uploading-sensor-data-in-Thing-Speak-cloud/assets/122252838/9a27dec0-8f30-4365-93e9-499bf3650782)
+  Serial.print("Humidity ");
+  Serial.print(humidity);
+  Serial.println(" g.m-3");
+
+  // Write temperature to ThingSpeakaK
+  ThingSpeak.writeField(myChannelField, TemperatureField, temperature, myWriteAPIKey); // Write temperature to ThingSpeak
+  ThingSpeak.writeField(myChannelField, HumidityField, humidity, myWriteAPIKey); // Write humidity to ThingSpeak
+
+
+  delay(1000);
+}
+
+```
+
+# CIRCUIT SETUP:
+<img src="https://github.com/AmruthaRajsheker/Uploading-sensor-data-in-Thing-Speak-cloud/assets/119475943/e0f44e29-a916-4afc-b233-8b58393da9bb" alt="description" style="width: 50%; height: auto;">
+
+
 
 # OUTPUT:
 
-![320400536-c927eedb-bd2b-45b4-90ea-cb25caebc358](https://github.com/Selvajoel/Uploading-sensor-data-in-Thing-Speak-cloud/assets/122252838/9b2f61b2-d8df-44d2-8a98-854c5a38c180)
+#### Output the values from the serial monitor in the Arduino IDE.
+<img src="https://github.com/AmruthaRajsheker/Uploading-sensor-data-in-Thing-Speak-cloud/assets/119475943/d8219690-2176-43b4-9abc-dd1ba28a1230" alt="description" style="width: 50%; height: auto;">
 
+#### Graphical values from ThingSpeak 
+<img src="https://github.com/AmruthaRajsheker/Uploading-sensor-data-in-Thing-Speak-cloud/assets/119475943/35b186ca-c6c9-4212-a53f-6bbaec56ef25" alt="description" style="width: 70%; height: auto;">
 
 # RESULT:
 
 Thus the temperature sensor values are updated in the Thing speak using ESP32 controller.
-
